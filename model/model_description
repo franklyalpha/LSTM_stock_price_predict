@@ -1,0 +1,16 @@
+Expectation:
+Being able to recommend the appropriate policy to adopt, for today.
+Should make as less transactions as possible, and the period of holding a stock should be as long as possible,
+to avoid incidental fees.
+
+elaboration on several serveys
+
+input: latest "hyperparam1" days' stock report, downloaded from yfinance, and being preprocessed
+       by adding extra indices, and being normalized (realizing normalization is not required
+       for some features, thus should not use any normalization layers in model)
+
+output: the expected "Position", which by explanation, is the percentage recommended
+        to invest, out of total money you expect to invest.
+
+structure:
+

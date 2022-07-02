@@ -1,0 +1,87 @@
+Standardization:
+    stock price and daily average requires standardization, so does MACD;
+    WR currently doesn't require standardization, but should consider whether the whole column should
+    divide by 100.
+    when standardizing, should we only standardize for each sample? (because it might not make sense to
+    standardize all period of data using the same criterion, as the "graph" is required, for analyzing intensity)
+
+    day_price standardization:
+    take the highest and lowest price "among" high, low, close and all daily average line,
+    and then take the difference of high and low as denominator for standardization;
+    (after this step, all data points are no different by 1;)
+    finally need to shift all data into the interval [0, 1].
+
+    MACD standardization:
+    Similar technique as standardizing day_price;
+    the high and low are gathered "among" MACD_line and MACD_signal (as these two lines are present on the
+    same screen, sharing same criterion;)
+    also the range of data should be placed between [-1, 1] -> the data standardization should pay attention to
+    consistency of "zero" line.
+    MACD_hist might require re-calculation.
+
+target:
+    Currently the model is still designed to be supervised; thus need to provide the target.
+    One idea came into the mind of us is, to predict the result of stock after 5 periods, 10 periods, 20 periods,
+    40 periods and use these information as a decision for whether to enter or quit the stock.
+    However this might lead to same long-term problems faced by most stock prediction models.
+    Therefore to better generalize, the target value should be loosen; instead of predicting the exact values,
+    what we need is just whether the price will be higher than current buying price.
+    the 10-20-40 helps generating an estimated graph, which can support up to at most one transactions per week.
+
+    The final result still require further consideration, but this simplification at least helps generating target values
+    much easier.
+
+    to see whether other alternative target values are available, should consult with your father and some data if
+    required.
+
+    realizing that sometimes long-term tendency can be an effective criterion for long-term prediction (60-period line,
+    etc.)
+
+
+
+
+
+
+
+22-06-25; discussion with father
+# impossible to perform long-term predictions;
+    # still require human for long-term;
+    # new tactics: 筹码：core: can't be fooled; require a period of collection to form peaks;
+
+    # test:
+    # tendency of rising: MA; EMA: 12, 50;
+    # 图像形态,均线形态，浪型……图像；
+    # daily_average: 20 and 60 cannot be fooled; the tendency could be followed;
+    # several patterns which ...
+    # 超过60，跌破20   暂时性的长期策略
+    # 仓位；
+    # 上升加仓：过10-2，过20-3，......
+    # however operations might be too frequent;
+
+    # introduction; the more you know, the better you could understand;
+    # your father's descriptions are far from enough; still require your own studying;
+    # each indices require a whole day to research and learn;
+    # toutiao video's description of these indices;
+    # expma: commonly used;
+    # MA, VOL, MACD, KDJ,
+    # to make your system unique: EXPMA, 吸拉派落，筹码；同花顺的筹码；
+    #
+    # 跌 3 波；
+
+    # 近况研究有录制视频；可以考虑视频压缩；
+    # 仅作为外行的兴趣向的研究；
+
+    # 盈利性得不到保障；系统只会控制损失（除了西蒙斯），难以保证盈利。
+    # 西蒙斯：人为看底，越下跌越加仓；（总有一次会到底）；
+    # KDJ, WR: 震荡指标；
+    # 趋势：看均线跌破，均线斜率；
+    # 上升，横盘，下跌；
+    # selectively choosing indices, depending on the tendency;
+    # not all indices suit every tendency;
+    # MACD
+
+    # 必须参加工作；需要找到相应的工作；
+    # 家庭财力有限；炒股近况也不太好（仍然在摸索）
+    # 19年资产为700万；
+    # 近年投资亏损为300万；22年资产为400万
+    # 有铤而走险的趋势；恐怕会经济拮据；
