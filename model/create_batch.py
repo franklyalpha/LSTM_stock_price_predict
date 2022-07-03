@@ -35,7 +35,23 @@ def normalize_sequence(sequential_data):
     normali.normalize_volume(sequential_data)
 
 
-def create_dataloader(panda_data, sequence_length, max_samples, batchsize):
+def generate_target(panda_data, curr_day, periods_list):
+    """
+    This is only an intuitive idea, might require further adjustments.
+
+    :return:
+    """
+    future_prices = []
+    curr_price = panda_data["Close"][curr_day]
+    incrementation = 1
+    for future_periods in periods_list:
+        close_price = panda_data["Close"][curr_day + future_periods]
+        future_prices.append(close_price)
+
+    return future_prices
+
+
+def create_dataloader(panda_data, sequence_length, max_samples, batchsize, prediction_periods):
     """
     realizing each sequential data piece has size: sequential_length * feature size;
 
@@ -49,10 +65,15 @@ def create_dataloader(panda_data, sequence_length, max_samples, batchsize):
 
     cleaned_data = remove_unnamed_and_date(panda_data)
     tensor_data = []
+    target_data = []
     # ensure only "numeric data" is in panda_data, for converting to numpy
-    for num_samples in range(max_samples):
+    normalize_sequence(cleaned_data)
+    for num_samples in range(min(max_samples,
+                                 len(panda_data) - max(prediction_periods))):
         subset = cleaned_data.iloc[num_samples:(num_samples + sequence_length)].copy()
-        normalize_sequence(subset)
+
+        target = generate_target(cleaned_data, num_samples + sequence_length, prediction_periods)
+
         numpy_sample = subset.to_numpy()
 
         if numpy_sample.shape[0] < sequence_length:
@@ -60,19 +81,21 @@ def create_dataloader(panda_data, sequence_length, max_samples, batchsize):
             break
         else:
             tensor_data.append(torch.tensor(numpy_sample, dtype=torch.float32))
-    dataset = StockDataset(tensor_data)
+            target_data.append(torch.tensor(target, dtype=torch.float32))
+    dataset = StockDataset(tensor_data, target_data)
     dataloader = data_p.DataLoader(dataset, batch_size=batchsize)
     return dataloader, tensor_data[0].shape[1]
 
 
 class StockDataset(data_p.Dataset):
-    def __init__(self, data):
+    def __init__(self, data, target):
         """
         :param data: each single element from the "sequential data" has dimension sequence_length *
         feature_size.
         """
         super(StockDataset, self).__init__()
         self.sequential_data = data
+        self.target = target
 
     def __len__(self):
         return len(self.sequential_data)
@@ -82,4 +105,4 @@ class StockDataset(data_p.Dataset):
         :param item: the index to acquire the data
         :return:
         """
-        return self.sequential_data[item]
+        return self.sequential_data[item], self.target[item]

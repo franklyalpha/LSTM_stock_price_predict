@@ -298,6 +298,6 @@ def add_all_indices_and_save(d_data, save_dest):
 
 
 if __name__ == "__main__":
-    d_data = yfinance.download("SPY", start="2010-01-01", end="2022-01-01")
+    d_data = yfinance.download("^IXIC", start="1990-01-01", end="2022-01-01")
     add_all_indices_and_save(d_data, "../data/spy1001-2201.csv")
 
