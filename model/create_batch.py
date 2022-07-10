@@ -2,6 +2,7 @@ import pandas
 import torch
 import data_preprocessing.normalization as normali
 import torch.utils.data as data_p
+import math
 
 """
 All operations assume the required indices/features in the data are already acquired. 
@@ -23,16 +24,21 @@ def remove_unnamed_and_date(data):
     return data
 
 
-def normalize_sequence(sequential_data):
+def normalize_sequence(sequential_data, target):
     """
 
     :param sequential_data: subset of pandas dataframe
-    :return: normalized pandas dataframe
+           target: a sequence of integers representing price to predict for assigned periods
+    :return: normalized target, which might have value greater than 1;
     """
-    normali.normalize_price_average(sequential_data)
+    unnormalized_high, unnormalized_low = normali.normalize_price_average(sequential_data)
     normali.normalize_WR(sequential_data)
     normali.normalize_macd(sequential_data)
     normali.normalize_volume(sequential_data)
+    for i in range(len(target)):
+        normalized_target = normali.normalize_formula(target[i], unnormalized_high,
+                                               unnormalized_low)
+        target[i] = normalized_target
 
 
 def generate_target(panda_data, curr_day, periods_list):
@@ -42,8 +48,7 @@ def generate_target(panda_data, curr_day, periods_list):
     :return:
     """
     future_prices = []
-    curr_price = panda_data["Close"][curr_day]
-    incrementation = 1
+    # curr_price = panda_data["Close"][curr_day]
     for future_periods in periods_list:
         close_price = panda_data["Close"][curr_day + future_periods]
         future_prices.append(close_price)
@@ -51,7 +56,8 @@ def generate_target(panda_data, curr_day, periods_list):
     return future_prices
 
 
-def create_dataloader(panda_data, sequence_length, max_samples, batchsize, prediction_periods):
+def create_dataloader(panda_data, sequence_length, max_samples,
+                      batchsize, prediction_periods, train_test_factor=0.8):
     """
     realizing each sequential data piece has size: sequential_length * feature size;
 
@@ -67,12 +73,14 @@ def create_dataloader(panda_data, sequence_length, max_samples, batchsize, predi
     tensor_data = []
     target_data = []
     # ensure only "numeric data" is in panda_data, for converting to numpy
-    normalize_sequence(cleaned_data)
+
     for num_samples in range(min(max_samples,
                                  len(panda_data) - max(prediction_periods))):
         subset = cleaned_data.iloc[num_samples:(num_samples + sequence_length)].copy()
 
         target = generate_target(cleaned_data, num_samples + sequence_length, prediction_periods)
+
+        normalize_sequence(subset, target)
 
         numpy_sample = subset.to_numpy()
 
@@ -83,8 +91,13 @@ def create_dataloader(panda_data, sequence_length, max_samples, batchsize, predi
             tensor_data.append(torch.tensor(numpy_sample, dtype=torch.float32))
             target_data.append(torch.tensor(target, dtype=torch.float32))
     dataset = StockDataset(tensor_data, target_data)
-    dataloader = data_p.DataLoader(dataset, batch_size=batchsize)
-    return dataloader, tensor_data[0].shape[1]
+    train_size = math.ceil(len(dataset) * train_test_factor)
+    split_dataset = data_p.random_split(dataset, [train_size,
+                                                  len(dataset) - train_size])
+
+    train_dataloader = data_p.DataLoader(split_dataset[0], batch_size=batchsize)
+    valid_dataloader = data_p.DataLoader(split_dataset[1], batch_size=1)
+    return train_dataloader, valid_dataloader, tensor_data[0].shape[1]
 
 
 class StockDataset(data_p.Dataset):

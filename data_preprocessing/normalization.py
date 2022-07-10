@@ -28,6 +28,7 @@ def normalize_price_average(data):
             new_col.append(normalized_point)
 
         data[columns] = new_col
+    return high, low
 
 
 def normalize_volume(data):
