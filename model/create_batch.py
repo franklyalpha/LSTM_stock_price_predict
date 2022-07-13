@@ -73,12 +73,12 @@ def create_dataloader(panda_data, sequence_length, max_samples,
     tensor_data = []
     target_data = []
     # ensure only "numeric data" is in panda_data, for converting to numpy
-
+    a = len(cleaned_data) - max(prediction_periods) - 1
     for num_samples in range(min(max_samples,
-                                 len(panda_data) - max(prediction_periods))):
+                                 len(cleaned_data) - max(prediction_periods) - 1)):
         subset = cleaned_data.iloc[num_samples:(num_samples + sequence_length)].copy()
 
-        target = generate_target(cleaned_data, num_samples + sequence_length, prediction_periods)
+        target = generate_target(cleaned_data, num_samples, prediction_periods)
 
         normalize_sequence(subset, target)
 
